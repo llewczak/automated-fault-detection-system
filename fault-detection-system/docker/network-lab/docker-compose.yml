@@ -1,0 +1,51 @@
+services:
+  generator:
+    build: ./generator
+    container_name: traffic-generator
+    cap_add:
+      - NET_ADMIN
+    networks:
+      net_client:
+        ipv4_address: 172.21.0.2
+    volumes:
+      - ./logs:/logs
+
+  gateway:
+    build: ./gateway
+    container_name: dut-gateway
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    networks:
+      net_client:
+        ipv4_address: 172.21.0.10
+      net_server:
+        ipv4_address: 172.22.0.10
+    volumes:
+      - ./logs:/logs
+
+  collector:
+    build: ./collector
+    container_name: collector-server
+    init: true
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    networks:
+      net_server:
+        ipv4_address: 172.22.0.20
+    volumes:
+      - ./logs:/logs
+
+networks:
+  net_client:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+  net_server:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
